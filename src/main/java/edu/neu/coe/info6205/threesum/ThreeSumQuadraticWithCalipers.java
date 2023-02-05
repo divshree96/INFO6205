@@ -59,7 +59,6 @@ public class ThreeSumQuadraticWithCalipers implements ThreeSum {
             if(sum == 0) {
                 triples.add(tripleObj);
             }
-
             if(sum < 0) {
                 j++;
             }
