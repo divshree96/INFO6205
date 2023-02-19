@@ -19,25 +19,43 @@ public class Main {
     public static void main(String[] args) {
         processArgs(args);
         System.out.println("Degree of parallelism: " + ForkJoinPool.getCommonPoolParallelism());
+
+        int[] arrLengths = {16384, 32768, 65536, 131072, 262144};
+        ForkJoinPool forkPool;
+
+        int[] threadNum = {2, 4, 8, 16,32};
         Random random = new Random();
-        int[] array = new int[2000000];
+        int[] array;
         ArrayList<Long> timeList = new ArrayList<>();
-        for (int j = 50; j < 100; j++) {
-            ParSort.cutoff = 10000 * (j + 1);
-            // for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-            long time;
-            long startTime = System.currentTimeMillis();
-            for (int t = 0; t < 10; t++) {
-                for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-                ParSort.sort(array, 0, array.length);
+
+        for(int l=0;l<arrLengths.length;l++) {
+            int length=arrLengths[l];
+            array = new int[length];
+
+            int[] cutoffLen = {length / 32 + 1, length / 16 + 1, length / 8 + 1, length / 4 + 1, length / 2 + 1, length + 1};
+            System.out.println("______________________________________________________________");
+            System.out.println("Length of array is " + arrLengths[l]);
+            System.out.println();
+
+
+            for (int n = 0; n < threadNum.length; n++) {
+                for (int c = 0; c < cutoffLen.length; c++) {
+                    ParSort.cutoff = cutoffLen[c];
+
+                    forkPool = new ForkJoinPool(threadNum[n]);
+                    long time;
+                    long startTime = System.currentTimeMillis();
+                    for (int t = 0; t < 10; t++) {
+                        for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
+                        ParSort.sort(array, 0, array.length, forkPool);
+                    }
+                    long endTime = System.currentTimeMillis();
+                    time = (endTime - startTime);
+                    timeList.add(time);
+
+
+                    System.out.println("cutoff：" + (ParSort.cutoff) + " Thread Count: " + threadNum[n] + "\t\t10times Time:" + time + "ms");}
             }
-            long endTime = System.currentTimeMillis();
-            time = (endTime - startTime);
-            timeList.add(time);
-
-
-            System.out.println("cutoff：" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
-
         }
         try {
             FileOutputStream fis = new FileOutputStream("./src/result.csv");
@@ -84,6 +102,5 @@ public class Main {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static final Map<String, Integer> configuration = new HashMap<>();
-
 
 }
